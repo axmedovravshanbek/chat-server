@@ -74,7 +74,6 @@ const authMiddleware = (req, res, next) => {
             return res.status(401).json('cdcsdcsdcs')
         }
         const userData = validateAccessToken(accessToken);
-        console.log(userData);
         if (!userData) {
             return res.status(401).json('cdcsdcsdcs')
         }
@@ -123,11 +122,17 @@ router.post('/login', async (req, res) => {
         const {email, password} = req.body;
         const user = await User.findOne({email});
         if (!user) {
-            return res.status(400).json({message: 'user not exists'})
+            return res.status(400).json({
+                message: {en: 'user not exists', uz: 'user not exists', ru: 'user not exists'},
+                errorField: 'email'
+            })
         }
         const isPasswordTrue = await bcrypt.compare(password, user.password);
         if (!isPasswordTrue) {
-            return res.status(400).json({message: 'parol xata'})
+            return res.status(400).json({
+                message: {en: 'parol xata', uz: 'parol xata', ru: 'parol xata'},
+                errorField: 'password'
+            })
         }
         const tokens = generateToken({
             id: user._id,
@@ -165,12 +170,15 @@ router.get('/refresh', async (req, res) => {
     try {
         const {refreshToken} = req.cookies;
         if (!refreshToken) {
-            return res.status(401).json({message: 'unauhtfd'})
+            return res.status(401).json({message: 'refresh token is not found on cookies'})
         }
         const userValidated = validateRefreshToken(refreshToken);
         const tokenFromDB = await Token.findOne({refreshToken});
-        if (!userValidated || !tokenFromDB) {
-            return res.status(401).json({message: 'unauthorized'})
+        if (!userValidated) {
+            return res.status(401).json({message: 'token is not validated'})
+        }
+        if (!tokenFromDB) {
+            return res.status(401).json({message: refreshToken})
         }
         const user = await User.findById(userValidated.id);
         const tokens = generateToken({
