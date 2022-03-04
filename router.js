@@ -89,7 +89,10 @@ router.post('/registration', async (req, res) => {
         const {email, password} = req.body;
         const candidate = await User.findOne({email});
         if (candidate) {
-            return res.status(400).json({message: 'user exists'})
+            return res.status(400).json({
+                message: {en: 'user  exists', uz: 'user  exists', ru: 'user exists'},
+                errorField: 'email'
+            })
         }
         const hashedPassword = await bcrypt.hash(password, 3);
         const activationLink = uuid.v4();
@@ -120,6 +123,7 @@ router.post('/registration', async (req, res) => {
 router.post('/login', async (req, res) => {
     try {
         const {email, password} = req.body;
+        console.log(email);
         const user = await User.findOne({email});
         if (!user) {
             return res.status(400).json({
