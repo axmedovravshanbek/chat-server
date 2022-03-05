@@ -123,7 +123,6 @@ router.post('/registration', async (req, res) => {
 router.post('/login', async (req, res) => {
     try {
         const {email, password} = req.body;
-        console.log(email);
         const user = await User.findOne({email});
         if (!user) {
             return res.status(400).json({
@@ -182,7 +181,7 @@ router.get('/refresh', async (req, res) => {
             return res.status(401).json({message: 'token is not validated'})
         }
         if (!tokenFromDB) {
-            return res.status(401).json({message: refreshToken})
+            return res.status(401).json({message: 'refreshToken '})
         }
         const user = await User.findById(userValidated.id);
         const tokens = generateToken({
