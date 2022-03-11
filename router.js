@@ -180,7 +180,7 @@ router.get('/refresh', async (req, res) => {
     try {
         const {refreshToken} = req.cookies;
         if (!refreshToken) {
-            return res.status(401).json({message: 'refresh token is not found on cookies'})
+            return res.status(401).json({c:req.cookies, message: 'refresh token is not found on cookies'})
         }
         const userValidated = validateRefreshToken(refreshToken);
         const tokenFromDB = await Token.findOne({refreshToken});
