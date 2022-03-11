@@ -1,13 +1,13 @@
 require('dotenv').config();
 const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
+const {Types} = require('mongoose');
 const express = require('express');
 const router = require('./router');
 const cors = require('cors');
-const {User, Message} =require('./models');
-
 const http = require("http");
 const {Server} = require("socket.io");
+const {User, Message} = require('./models');
 
 const app = express();
 const server = http.createServer(app);
@@ -28,83 +28,122 @@ app.use(cors({
 }));
 app.use('/api', router);
 
-// io.on("connection", async (socket) => {
-//     // console.log(socket.id);
-//     socket.on('online', async () => {
-//         // console.count('online-------------------------')
-//     });
-// });
-io.on("connection", async (socket) => {
-    socket.join('room');
-    let userIds = {};
+io.on('connection', async (socket) => {
+    socket.join('all');
 
-    async function sendMessages() {
-        const newMessages = await Message.find();
-        socket.to('room').emit("backend_sends_message", newMessages);
-        socket.emit("backend_sends_message", newMessages);
-    }
+    socket.on('imOnline', async (myId) => {
+        await User.updateOne({_id: myId}, {isOnline: true, socketId: socket.id}, {upsert: true});
+        const sendUnread = async (RSId, userId = myId) => {
+            const unread = await Message.aggregate([
+                {$match: {$and: [{receiverId: Types.ObjectId(userId)}, {deliveryStatus: 1}]}},
+                {$group: {_id: "$senderId", count: {$sum: 1}, lastTime: {$max: "$sentTime"}}}
+            ]);
+            if (!RSId) {
+                return socket.emit('unreadMessages', unread);
+            }
+            socket.to(RSId).emit('unreadMessages', unread)
 
-    async function sendUnread() {
-        const unread = await Message.aggregate([
+        };
+        const myChats = await Message.aggregate([
+            {$match: {$or: [{receiverId: Types.ObjectId(myId)}, {senderId: Types.ObjectId(myId)}]}},
             {
-                $match: {$and: [{receiverId: userIds[socket.id]}, {deliveryStatus: 1}]}
+                $lookup: {
+                    from: 'users',
+                    localField: 'senderId',
+                    foreignField: '_id',
+                    as: 'sender'
+                }
             },
             {
+                $lookup: {
+                    from: 'users',
+                    localField: 'receiverId',
+                    foreignField: '_id',
+                    as: 'receiver'
+                }
+            },
+            {$unwind: '$receiver'},
+            {$unwind: '$sender'},
+            {
                 $group: {
-                    _id: "$senderId",
-                    count: {$sum: 1}
+                    _id: "$room",
+                    receiver: {$first: "$receiver"},
+                    sender: {$first: "$sender"},
+                    lastMessage: {
+                        $last: {
+                            msgContent: "$msgContent",
+                            deliveryStatus: "$deliveryStatus",
+                            msgType: "$msgType",
+                            sentTime: "$sentTime"
+                        }
+                    },
                 }
             }
         ]);
-        socket.emit("backend_sends_unread", unread);
-    }
-
-    async function sendUsers() {
-        const users = await User.find();
-        socket.to('room').emit("backend_sends_user", users);
-        socket.emit("backend_sends_user", users);
-    }
-
-    await sendMessages();
-    await sendUsers();
-    await sendUnread();
-
-    socket.on('frontend_registers', async () => {
-        await sendUsers()
-    });
-    socket.on("frontend_sends_message", async (data) => {
-        await new Message(data).save();
-        await sendMessages();
+        socket.emit('myChats', myChats);
+        const allUsers = await User.find();
+        socket.emit('allUsers', allUsers);
+        socket.to('all').emit('allUsers', allUsers);
+        const myMessages = await Message.find({$or: [{senderId: myId}, {receiverId: myId}]});
+        socket.emit('myMessages', myMessages);
         await sendUnread();
+
+        socket.on('iSentMessage', async (data) => {
+            await new Message({
+                ...data,
+                room: myId.localeCompare(data.receiverId) === 1 ? `${data.receiverId}${myId}` : `${myId}${data.receiverId}`
+            }).save();
+
+            const myMessages = await Message.find({$or: [{senderId: myId}, {receiverId: myId}]});
+            socket.emit('myMessages', myMessages);
+
+            const hisMessages = await Message.find({$or: [{senderId: data.receiverId}, {receiverId: data.receiverId}]});
+            socket.to(data.RSId).emit('myMessages', hisMessages);
+
+            await sendUnread(data.RSId, data.receiverId)
+        });
+        socket.on('iRead', async function ({receiverId, senderId, RSId}) {
+            const readChanges = await Message.updateMany({receiverId, senderId}, {deliveryStatus: 2});
+            if (readChanges.modifiedCount) {
+
+                const myMessages = await Message.find({$or: [{senderId: myId}, {receiverId: myId}]});
+                socket.emit('myMessages', myMessages);
+
+                const hisMessages = await Message.find({$or: [{senderId: senderId}, {receiverId: senderId}]});
+                socket.to(RSId).emit('myMessages', hisMessages);
+
+                await sendUnread()
+            }
+        });
+        socket.on('imTyping', async ({receiverId = '', RSId}) => {
+            await User.updateOne({_id: myId}, {typingTo: receiverId});
+            const allUsers = await User.find();
+            socket.to(RSId).emit('allUsers', allUsers);
+        });
+        socket.on('disconnected', async () => {
+            const date = Date.now();
+            await User.updateOne({_id: myId}, {
+                isOnline: false,
+                socketId: '',
+                lastOnline: date,
+                typingTo: ''
+            });
+            const allUsers = await User.find();
+            socket.to('all').emit('allUsers', allUsers);
+        });
     });
-    socket.on("read_messages", async function (data) {
-        await Message.updateMany({receiverId: data.receiverId, senderId: data.senderId}, {deliveryStatus: 2});
-        await sendMessages();
-        await sendUnread();
-    });
-    socket.on('user_online', async function (data) {
-        // userIds = {...userIds, [socket.id]: data.userId};
-        // await User.updateOne({_id: data.userId}, {isOnline: true, typingTo: ''});
-        // await sendUsers();
-        // await sendUnread()
-    });
-    socket.on('is_typing', async function (data) {
-        await User.updateOne({_id: data.userId}, {typingTo: data.otherId});
-        await sendUsers()
-    });
-    socket.on('is_not_typing', async function (data) {
-        await User.updateOne({_id: data.userId}, {typingTo: ''});
-        await sendUsers()
-    });
-    socket.on("disconnect", async function (e) {
+    socket.on('disconnect', async () => {
         const date = Date.now();
-        await User.updateOne({_id: userIds[socket.id]}, {isOnline: false, lastOnline: date, typingTo: ''});
-        await sendUsers();
-        delete userIds[socket.id];
+        await User.updateOne({socketId: socket.id}, {
+            isOnline: false,
+            // socketId: '',
+            lastOnline: date,
+            typingTo: ''
+        });
+        const allUsers = await User.find();
+        socket.to('all').emit('allUsers', allUsers);
     });
 });
-
-
 const start = async () => {
     try {
         await mongoose.connect(process.env.DB_URL, {
@@ -118,5 +157,4 @@ const start = async () => {
         console.log('e ', e)
     }
 };
-
 start();

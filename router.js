@@ -86,7 +86,7 @@ const authMiddleware = (req, res, next) => {
 
 router.post('/registration', async (req, res) => {
     try {
-        const {email, password} = req.body;
+        const {email, password, fullName, imgSrc} = req.body;
         const candidate = await User.findOne({email});
         if (candidate) {
             return res.status(400).json({
@@ -96,10 +96,17 @@ router.post('/registration', async (req, res) => {
         }
         const hashedPassword = await bcrypt.hash(password, 3);
         const activationLink = uuid.v4();
-        const user = await User.create({email, password: hashedPassword, activationLink});
+        const user = await User.create({
+            email,
+            fullName,
+            imgSrc,
+            password: hashedPassword,
+            activationLink
+        });
+        console.log('create ', user);
         await sendMail(email, `${process.env.API_URL}/api/activate/${activationLink}/`);
         const tokens = generateToken({
-            id: user._id,
+            _id: user._id,
             email: user.email,
             isActivated: user.isActivated,
         });
@@ -110,7 +117,7 @@ router.post('/registration', async (req, res) => {
         return res.json({
             // ...tokens,
             user: {
-                id: user._id,
+                _id: user._id,
                 email: user.email,
                 isActivated: user.isActivated,
             }
@@ -138,7 +145,7 @@ router.post('/login', async (req, res) => {
             })
         }
         const tokens = generateToken({
-            id: user._id,
+            _id: user._id,
             email: user.email,
             isActivated: user.isActivated,
         });
@@ -148,7 +155,7 @@ router.post('/login', async (req, res) => {
         return res.json({
             ...tokens,
             user: {
-                id: user._id,
+                _id: user._id,
                 email: user.email,
                 isActivated: user.isActivated,
             }
@@ -183,9 +190,9 @@ router.get('/refresh', async (req, res) => {
         if (!tokenFromDB) {
             return res.status(401).json({message: 'refreshToken '})
         }
-        const user = await User.findById(userValidated.id);
+        const user = await User.findById(userValidated._id);
         const tokens = generateToken({
-            id: user._id,
+            _id: user._id,
             email: user.email,
             isActivated: user.isActivated,
         });
@@ -195,7 +202,7 @@ router.get('/refresh', async (req, res) => {
         return res.json({
             ...tokens,
             user: {
-                id: user._id,
+                _id: user._id,
                 email: user.email,
                 isActivated: user.isActivated,
             }
