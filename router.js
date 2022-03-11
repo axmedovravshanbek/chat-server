@@ -210,7 +210,7 @@ router.get('/refresh', async (req, res) => {
 
     } catch (e) {
         console.log(e);
-        res.json({message: 'catch error'})
+        res.json({req:req, message: 'catch error'})
     }
 });
 router.get('/activate/:link', async (req, res) => {
