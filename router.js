@@ -180,7 +180,7 @@ router.get('/refresh', async (req, res) => {
     try {
         const {refreshToken} = req.cookies;
         if (!refreshToken) {
-            return res.status(401).json({s:req, message: 'refresh token is not found on cookies'})
+            return res.status(401).json({message: 'refresh token is not found on cookies'})
         }
         const userValidated = validateRefreshToken(refreshToken);
         const tokenFromDB = await Token.findOne({refreshToken});
@@ -210,7 +210,7 @@ router.get('/refresh', async (req, res) => {
 
     } catch (e) {
         console.log(e);
-        res.json({req:req, message: 'catch error'})
+        res.json({message: 'catch error'})
     }
 });
 router.get('/activate/:link', async (req, res) => {
