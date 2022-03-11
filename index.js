@@ -1,4 +1,3 @@
-require('dotenv').config();
 const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
 const {Types} = require('mongoose');
@@ -14,7 +13,7 @@ const server = http.createServer(app);
 const PORT = process.env.PORT || 80;
 const io = new Server(server, {
     cors: {
-        origin: process.env.CLIENT_URL,
+        origin: 'http://192.168.0.104:3000',
         methods: ["GET", "POST"],
     },
 });
@@ -24,7 +23,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
     credentials: true,
-    origin: process.env.CLIENT_URL
+    origin: 'http://192.168.0.104:3000'
 }));
 app.use('/api', router);
 
@@ -146,7 +145,7 @@ io.on('connection', async (socket) => {
 });
 const start = async () => {
     try {
-        await mongoose.connect(process.env.DB_URL, {
+        await mongoose.connect('mongodb+srv://airfun:airfun@cluster0.gggz2.mongodb.net/auth?retryWrites=true&w=majority', {
             useNewUrlParser: true,
             useUnifiedTopology: true
         });

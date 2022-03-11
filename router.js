@@ -9,14 +9,14 @@ const router = new Router();
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: process.env.G_USER,
-        pass: process.env.G_PASS
+        user: 'ahmedovravshanbek21@gmail.com',
+        pass: 'axmedov312'
     }
 });
 
 const sendMail = async (to, link) => {
     transporter.sendMail({
-        from: process.env.G_USER,
+        from: 'ahmedovravshanbek21@gmail.com',
         to,
         subject: 'Account Activation',
         html:
@@ -37,8 +37,8 @@ const sendMail = async (to, link) => {
 
 };
 const generateToken = (payload) => {
-    const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_TOKEN, {expiresIn: '30m'});
-    const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_TOKEN, {expiresIn: '30d'});
+    const accessToken = jwt.sign(payload, 'air-fun-secret-key', {expiresIn: '30m'});
+    const refreshToken = jwt.sign(payload, 'air-fun-refresh-key', {expiresIn: '30d'});
     return {accessToken, refreshToken}
 };
 const saveToken = async (userId, refreshToken) => {
@@ -51,14 +51,14 @@ const saveToken = async (userId, refreshToken) => {
 };
 const validateAccessToken = (token) => {
     try {
-        return jwt.verify(token, process.env.JWT_ACCESS_TOKEN)
+        return jwt.verify(token, 'air-fun-secret-key')
     } catch (e) {
         return null
     }
 };
 const validateRefreshToken = (token) => {
     try {
-        return jwt.verify(token, process.env.JWT_REFRESH_TOKEN)
+        return jwt.verify(token, 'air-fun-refresh-key')
     } catch (e) {
         return null
     }
@@ -104,7 +104,7 @@ router.post('/registration', async (req, res) => {
             activationLink
         });
         console.log('create ', user);
-        await sendMail(email, `${process.env.API_URL}/api/activate/${activationLink}/`);
+        await sendMail(email, `https://airfun-b.herokuapp.com/api/activate/${activationLink}/`);
         const tokens = generateToken({
             _id: user._id,
             email: user.email,
@@ -222,7 +222,7 @@ router.get('/activate/:link', async (req, res) => {
         }
         user.isActivated = true;
         await user.save();
-        return res.redirect(process.env.CLIENT_URL)
+        return res.redirect('http://192.168.0.104:3000')
     } catch (e) {
         console.log(e);
         res.json({message: 'catch error'});
