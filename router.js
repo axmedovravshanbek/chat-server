@@ -103,7 +103,6 @@ router.post('/registration', async (req, res) => {
             password: hashedPassword,
             activationLink
         });
-        console.log('create ', user);
         await sendMail(email, `https://airfun-b.herokuapp.com/api/activate/${activationLink}/`);
         const tokens = generateToken({
             _id: user._id,
@@ -115,7 +114,7 @@ router.post('/registration', async (req, res) => {
         res.cookie('refreshToken', tokens.refreshToken, {maxAge: 30 * 24 * 60 * 60 * 100, httpOnly: true});
 
         return res.json({
-            // ...tokens,
+            ...tokens,
             user: {
                 _id: user._id,
                 email: user.email,
@@ -179,8 +178,9 @@ router.post('/logout', async (req, res) => {
 router.get('/refresh', async (req, res) => {
     try {
         const {refreshToken} = req.cookies;
+        console.log(refreshToken);
         if (!refreshToken) {
-            return res.status(401).json({c:req.cookies, message: 'refresh token is not found on cookies'})
+            return res.status(401).json({c: req.cookies, message: 'refresh token is not found on cookies'})
         }
         const userValidated = validateRefreshToken(refreshToken);
         const tokenFromDB = await Token.findOne({refreshToken});
@@ -200,6 +200,7 @@ router.get('/refresh', async (req, res) => {
         res.cookie('refreshToken', tokens.refreshToken, {maxAge: 30 * 24 * 60 * 60 * 100, httpOnly: true});
 
         return res.json({
+            refTok:refreshToken,
             ...tokens,
             user: {
                 _id: user._id,
