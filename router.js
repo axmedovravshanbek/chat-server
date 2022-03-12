@@ -178,7 +178,7 @@ router.post('/logout', async (req, res) => {
 router.get('/refresh', async (req, res) => {
     try {
         const {refreshToken} = req.cookies;
-        console.log('refreshToken',refreshToken);
+        console.log('req',req);
         if (!refreshToken) {
             return res.status(401).json({
                 message: `refresh yoq token is not found on cookies`
