@@ -178,10 +178,10 @@ router.post('/logout', async (req, res) => {
 router.get('/refresh', async (req, res) => {
     try {
         const {refreshToken} = req.cookies;
-        console.log(refreshToken);
+        console.log('refreshToken',refreshToken);
         if (!refreshToken) {
             return res.status(401).json({
-                message: `refresh token is not found on cookies ${JSON.stringify(req)}`
+                message: `refresh yoq token is not found on cookies`
             })
         }
         const userValidated = validateRefreshToken(refreshToken);
