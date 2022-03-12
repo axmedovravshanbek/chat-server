@@ -55,7 +55,7 @@ const saveToken = async (userId, refreshToken) => {
 //     } catch (e) {
 //         return null
 //     }
-// };
+// }
 const validateRefreshToken = (token) => {
     try {
         return jwt.verify(token, 'air-fun-refresh-key')
@@ -90,8 +90,6 @@ router.post('/registration', async (req, res) => {
             isActivated: user.isActivated,
         });
         await saveToken(user._id, tokens.refreshToken);
-
-        res.cookie('refreshToken', tokens.refreshToken, {maxAge: 30 * 24 * 60 * 60 * 100, httpOnly: true});
 
         return res.json({
             ...tokens,
