@@ -37,9 +37,8 @@ const sendMail = async (to, link) => {
 
 };
 const generateToken = (payload) => {
-    const accessToken = jwt.sign(payload, 'air-fun-secret-key', {expiresIn: '30m'});
     const refreshToken = jwt.sign(payload, 'air-fun-refresh-key', {expiresIn: '30d'});
-    return {accessToken, refreshToken}
+    return {refreshToken}
 };
 const saveToken = async (userId, refreshToken) => {
     const tokenData = await Token.findOne({user: userId});
@@ -49,13 +48,6 @@ const saveToken = async (userId, refreshToken) => {
     }
     return await Token.create({user: userId, refreshToken})
 };
-// const validateAccessToken = (token) => {
-//     try {
-//         return jwt.verify(token, 'air-fun-secret-key')
-//     } catch (e) {
-//         return null
-//     }
-// }
 const validateRefreshToken = (token) => {
     try {
         return jwt.verify(token, 'air-fun-refresh-key')
@@ -88,9 +80,9 @@ router.post('/registration', async (req, res) => {
             _id: user._id,
             email: user.email,
             isActivated: user.isActivated,
-            fullName:user.fullName,
-            imgSrc:user.imgSrc,
-            activationLink:user.activationLink
+            fullName: user.fullName,
+            imgSrc: user.imgSrc,
+            activationLink: user.activationLink
         });
         await saveToken(user._id, tokens.refreshToken);
 
@@ -128,12 +120,11 @@ router.post('/login', async (req, res) => {
             _id: user._id,
             email: user.email,
             isActivated: user.isActivated,
-            fullName:user.fullName,
-            imgSrc:user.imgSrc,
-            activationLink:user.activationLink
+            fullName: user.fullName,
+            imgSrc: user.imgSrc,
+            activationLink: user.activationLink
         });
         await saveToken(user._id, tokens.refreshToken);
-        res.cookie('refreshToken', tokens.refreshToken, {maxAge: 30 * 24 * 60 * 60 * 100, httpOnly: true});
 
         return res.json({
             ...tokens,
@@ -148,24 +139,22 @@ router.post('/login', async (req, res) => {
         res.status(401).json({message: 'catch error'})
     }
 });
-router.post('/logout', async (req, res) => {
-    try {
-        const {refreshToken} = req.cookies;
-        const tokenData = await Token.deleteOne({refreshToken});
-        res.clearCookie('refreshToken');
-        return res.json({token: tokenData})
-    } catch (e) {
-        console.log(e);
-        res.json({message: 'catch error'})
-    }
-});
+// router.post('/logout', async (req, res) => {
+//     try {
+//         const {refreshToken} = req.cookies;
+//         const tokenData = await Token.deleteOne({refreshToken});
+//         return res.json({token: tokenData})
+//     } catch (e) {
+//         console.log(e);
+//         res.json({message: 'catch error'})
+//     }
+// });
 router.get('/refresh', async (req, res) => {
     try {
         const refreshToken = req.headers.authorization.split(' ')[1];
-        console.log('ref  +++++++++++++', refreshToken)
         if (!refreshToken) {
             return res.status(401).json({
-                message: `refresh yoq token is not found on cookies`
+                message: `refresh token is not found`
             })
         }
         const userValidated = validateRefreshToken(refreshToken);
@@ -181,15 +170,14 @@ router.get('/refresh', async (req, res) => {
             _id: user._id,
             email: user.email,
             isActivated: user.isActivated,
-            fullName:user.fullName,
-            imgSrc:user.imgSrc,
-            activationLink:user.activationLink
+            fullName: user.fullName,
+            imgSrc: user.imgSrc,
+            activationLink: user.activationLink
         });
         await saveToken(user._id, tokens.refreshToken);
-        res.cookie('refreshToken', tokens.refreshToken, {maxAge: 30 * 24 * 60 * 60 * 100, httpOnly: true});
 
         return res.json({
-            refTok:refreshToken,
+            refTok: refreshToken,
             ...tokens,
             user: {
                 _id: user._id,
