@@ -111,7 +111,7 @@ router.post('/registration', async (req, res) => {
         });
         await saveToken(user._id, tokens.refreshToken);
 
-        res.cookies('refreshToken', tokens.refreshToken, {maxAge: 30 * 24 * 60 * 60 * 100, httpOnly: true});
+        res.cookie('refreshToken', tokens.refreshToken, {maxAge: 30 * 24 * 60 * 60 * 100, httpOnly: true});
 
         return res.json({
             ...tokens,
@@ -149,7 +149,7 @@ router.post('/login', async (req, res) => {
             isActivated: user.isActivated,
         });
         await saveToken(user._id, tokens.refreshToken);
-        res.cookies('refreshToken', tokens.refreshToken, {maxAge: 30 * 24 * 60 * 60 * 100, httpOnly: true});
+        res.cookie('refreshToken', tokens.refreshToken, {maxAge: 30 * 24 * 60 * 60 * 100, httpOnly: true});
 
         return res.json({
             ...tokens,
@@ -199,7 +199,7 @@ router.get('/refresh', async (req, res) => {
             isActivated: user.isActivated,
         });
         await saveToken(user._id, tokens.refreshToken);
-        res.cookies('refreshToken', tokens.refreshToken, {maxAge: 30 * 24 * 60 * 60 * 100, httpOnly: true});
+        res.cookie('refreshToken', tokens.refreshToken, {maxAge: 30 * 24 * 60 * 60 * 100, httpOnly: true});
 
         return res.json({
             refTok:refreshToken,
