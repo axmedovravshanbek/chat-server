@@ -92,6 +92,9 @@ router.post('/registration', async (req, res) => {
                 _id: user._id,
                 email: user.email,
                 isActivated: user.isActivated,
+                fullName: user.fullName,
+                imgSrc: user.imgSrc,
+                activationLink: user.activationLink
             }
         })
     } catch (e) {
@@ -132,6 +135,9 @@ router.post('/login', async (req, res) => {
                 _id: user._id,
                 email: user.email,
                 isActivated: user.isActivated,
+                fullName: user.fullName,
+                imgSrc: user.imgSrc,
+                activationLink: user.activationLink
             }
         })
     } catch (e) {
@@ -183,6 +189,9 @@ router.get('/refresh', async (req, res) => {
                 _id: user._id,
                 email: user.email,
                 isActivated: user.isActivated,
+                fullName: user.fullName,
+                imgSrc: user.imgSrc,
+                activationLink: user.activationLink
             }
         })
 
