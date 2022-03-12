@@ -44,6 +44,9 @@ app.use(session({
     },
 }));
 app.use('/api', router);
+app.get('/', (req, res)=>{
+    res.json({message:'hello'})
+});
 
 
 io.on('connection', async (socket) => {
