@@ -7,6 +7,7 @@ const cors = require('cors');
 const http = require("http");
 const {Server} = require("socket.io");
 const {User, Message} = require('./models');
+var session = require('express-session')
 
 const app = express();
 const server = http.createServer(app);
@@ -27,6 +28,7 @@ app.use(cors({
     origin: 'http://192.168.0.104:3000'
 }));
 app.use(session({
+    secret:'air-fun',
     resave: true,
     saveUninitialized: true,
     proxy: true,
