@@ -181,8 +181,7 @@ router.get('/refresh', async (req, res) => {
         console.log(refreshToken);
         if (!refreshToken) {
             return res.status(401).json({
-                refTok: JSON.stringify(refreshToken),
-                message: 'refresh token is not found on cookies'
+                message: `refresh token is not found on cookies ${JSON.stringify(refreshToken)}`
             })
         }
         const userValidated = validateRefreshToken(refreshToken);
