@@ -62,7 +62,7 @@ router.post('/registration', async (req, res) => {
         const candidate = await User.findOne({email});
         if (candidate) {
             return res.status(400).json({
-                message: {en: 'user  exists', uz: 'user  exists', ru: 'user exists'},
+gi                message: {en: 'User already exists', uz: 'Foydalanuvchi allaqachon mavjud', ru: 'Пользователь уже существует'},
                 errorField: 'email'
             })
         }
@@ -108,14 +108,14 @@ router.post('/login', async (req, res) => {
         const user = await User.findOne({email});
         if (!user) {
             return res.status(400).json({
-                message: {en: 'user not exists', uz: 'user not exists', ru: 'user not exists'},
+                message: {en: 'User not found', uz: 'Foydalanuvchi topilmadi', ru: 'Пользователь не найден'},
                 errorField: 'email'
             })
         }
         const isPasswordTrue = await bcrypt.compare(password, user.password);
         if (!isPasswordTrue) {
             return res.status(400).json({
-                message: {en: 'parol xata', uz: 'parol xata', ru: 'parol xata'},
+                message: {en: 'Wrong password', uz: 'Noto\'g\'ri parol', ru: 'Неправильный пароль'},
                 errorField: 'password'
             })
         }
