@@ -21,9 +21,19 @@ const io = new Server(server, {
 
 app.use(express.json());
 app.use(cookieParser());
+
 app.use(cors({
     credentials: true,
     origin: 'http://192.168.0.104:3000'
+}));
+app.use(session({
+    resave: true,
+    saveUninitialized: true,
+    proxy: true,
+    cookie: {
+        sameSite:'none',
+        secure:true
+    },
 }));
 app.use('/api', router);
 
