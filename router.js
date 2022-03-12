@@ -62,7 +62,7 @@ router.post('/registration', async (req, res) => {
         const candidate = await User.findOne({email});
         if (candidate) {
             return res.status(400).json({
-gi                message: {en: 'User already exists', uz: 'Foydalanuvchi allaqachon mavjud', ru: 'Пользователь уже существует'},
+                message: {en: 'User already exists', uz: 'Foydalanuvchi allaqachon mavjud', ru: 'Пользователь уже существует'},
                 errorField: 'email'
             })
         }
