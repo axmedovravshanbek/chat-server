@@ -25,6 +25,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(cookieSession({
     name: 'session',
+    secureProxy:true,
     keys: ['secret keys'],
     maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
 }));
@@ -43,6 +44,7 @@ app.use(session({
     },
 }));
 app.use('/api', router);
+
 
 io.on('connection', async (socket) => {
     socket.join('all');

@@ -231,7 +231,7 @@ router.get('/activate/:link', async (req, res) => {
         res.json({message: 'catch error'});
     }
 });
-router.get('/users', authMiddleware, async (req, res) => {
+router.get('/users', async (req, res) => {
     try {
         const users = await User.find();
         res.json(users)
