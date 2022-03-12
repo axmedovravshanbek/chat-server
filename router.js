@@ -88,6 +88,9 @@ router.post('/registration', async (req, res) => {
             _id: user._id,
             email: user.email,
             isActivated: user.isActivated,
+            fullName:user.fullName,
+            imgSrc:user.imgSrc,
+            activationLink:user.activationLink
         });
         await saveToken(user._id, tokens.refreshToken);
 
@@ -125,6 +128,9 @@ router.post('/login', async (req, res) => {
             _id: user._id,
             email: user.email,
             isActivated: user.isActivated,
+            fullName:user.fullName,
+            imgSrc:user.imgSrc,
+            activationLink:user.activationLink
         });
         await saveToken(user._id, tokens.refreshToken);
         res.cookie('refreshToken', tokens.refreshToken, {maxAge: 30 * 24 * 60 * 60 * 100, httpOnly: true});
@@ -175,6 +181,9 @@ router.get('/refresh', async (req, res) => {
             _id: user._id,
             email: user.email,
             isActivated: user.isActivated,
+            fullName:user.fullName,
+            imgSrc:user.imgSrc,
+            activationLink:user.activationLink
         });
         await saveToken(user._id, tokens.refreshToken);
         res.cookie('refreshToken', tokens.refreshToken, {maxAge: 30 * 24 * 60 * 60 * 100, httpOnly: true});
