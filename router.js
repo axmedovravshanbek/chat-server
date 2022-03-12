@@ -209,7 +209,7 @@ router.get('/activate/:link', async (req, res) => {
         }
         user.isActivated = true;
         await user.save();
-        return res.redirect('http://192.168.0.104:3000')
+        return res.redirect('https://chat-airfun.netlify.app')
     } catch (e) {
         console.log(e);
         res.json({message: 'catch error'});

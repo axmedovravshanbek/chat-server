@@ -12,7 +12,7 @@ const server = http.createServer(app);
 const PORT = process.env.PORT || 80;
 const io = new Server(server, {
     cors: {
-        origin: 'http://192.168.0.104:3000',
+        origin: 'https://chat-airfun.netlify.app',
         methods: ["GET", "POST", "OPTIONS"],
     },
 });
@@ -20,7 +20,7 @@ const io = new Server(server, {
 app.use(express.json());
 app.use(cors({
     credentials: true,
-    origin: 'http://192.168.0.104:3000'
+    origin: 'https://chat-airfun.netlify.app'
 }));
 app.use('/api', router);
 app.get('/', (req, res) => {
