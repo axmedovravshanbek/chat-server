@@ -7,7 +7,8 @@ const cors = require('cors');
 const http = require("http");
 const {Server} = require("socket.io");
 const {User, Message} = require('./models');
-var session = require('express-session')
+var session = require('express-session');
+var cookieSession = require('cookie-session');
 
 const app = express();
 const server = http.createServer(app);
@@ -22,19 +23,23 @@ const io = new Server(server, {
 
 app.use(express.json());
 app.use(cookieParser());
-
+app.use(cookieSession({
+    name: 'session',
+    keys: ['secret keys'],
+    maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+}));
 app.use(cors({
     credentials: true,
     origin: 'http://192.168.0.104:3000'
 }));
 app.use(session({
-    secret:'air-fun',
+    secret: 'air-fun',
     resave: true,
     saveUninitialized: true,
     proxy: true,
     cookie: {
-        sameSite:'none',
-        secure:true
+        sameSite: 'none',
+        secure: true
     },
 }));
 app.use('/api', router);
