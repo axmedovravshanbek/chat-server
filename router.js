@@ -49,38 +49,18 @@ const saveToken = async (userId, refreshToken) => {
     }
     return await Token.create({user: userId, refreshToken})
 };
-const validateAccessToken = (token) => {
-    try {
-        return jwt.verify(token, 'air-fun-secret-key')
-    } catch (e) {
-        return null
-    }
-};
+// const validateAccessToken = (token) => {
+//     try {
+//         return jwt.verify(token, 'air-fun-secret-key')
+//     } catch (e) {
+//         return null
+//     }
+// };
 const validateRefreshToken = (token) => {
     try {
         return jwt.verify(token, 'air-fun-refresh-key')
     } catch (e) {
         return null
-    }
-};
-const authMiddleware = (req, res, next) => {
-    try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader) {
-            return res.status(401).json('cdcsdcsdcs')
-        }
-        const accessToken = authHeader.split(' ')[1];
-        if (!accessToken) {
-            return res.status(401).json('cdcsdcsdcs')
-        }
-        const userData = validateAccessToken(accessToken);
-        if (!userData) {
-            return res.status(401).json('cdcsdcsdcs')
-        }
-        req.user = userData;
-        next()
-    } catch (e) {
-        console.log(e)
     }
 };
 
@@ -177,8 +157,8 @@ router.post('/logout', async (req, res) => {
 });
 router.get('/refresh', async (req, res) => {
     try {
-        const {refreshToken} = req.cookies;
-        console.log('req.cookies',req.cookies);
+        const refreshToken = req.headers.authorization.split(' ')[1];
+        console.log('ref  +++++++++++++', refreshToken)
         if (!refreshToken) {
             return res.status(401).json({
                 message: `refresh yoq token is not found on cookies`
