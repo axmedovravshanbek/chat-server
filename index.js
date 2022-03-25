@@ -106,14 +106,8 @@ io.on('connection', async (socket) => {
 
         socket.on('iSentMessage', async (data) => {
             const {senderName, receiverId, RSId, fcmToken, msgContent} = data;
-            //const message =
-            await new Message({
-                ...data,
-                // room: myId.localeCompare(data.receiverId) === 1 ? `${data.receiverId}${myId}` : `${myId}${data.receiverId}`
-            }).save();
-            // console.log(message);
-            // console.log(fcmToken);
-            sendNotification(fcmToken, senderName, msgContent);
+            await new Message({...data}).save();
+            // sendNotification(fcmToken, senderName, msgContent);
             const myMessages = await Message.find({$or: [{senderId: myId}, {receiverId: myId}]});
             socket.emit('myMessages', myMessages);
 
