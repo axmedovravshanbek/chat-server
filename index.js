@@ -107,7 +107,8 @@ io.on('connection', async (socket) => {
         socket.on('iSentMessage', async (data) => {
             const {senderName, receiverId, RSId, fcmToken, msgContent} = data;
             await new Message({...data}).save();
-            // sendNotification(fcmToken, senderName, msgContent);
+            console.log(fcmToken, senderName, msgContent);
+            sendNotification(fcmToken, senderName, msgContent);
             const myMessages = await Message.find({$or: [{senderId: myId}, {receiverId: myId}]});
             socket.emit('myMessages', myMessages);
 
