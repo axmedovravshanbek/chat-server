@@ -1,3 +1,4 @@
+require('dotenv').config();
 const mongoose = require('mongoose');
 const {Types} = require('mongoose');
 const express = require('express');
@@ -6,13 +7,14 @@ const cors = require('cors');
 const http = require("http");
 const {Server} = require("socket.io");
 const {User, Message} = require('./models');
+const axios = require('axios');
 
 const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 80;
 const io = new Server(server, {
     cors: {
-        origin: 'https://chat-airfun.netlify.app',
+        origin: process.env.CLIENT_URL,
         methods: ["GET", "POST", "OPTIONS"],
     },
 });
@@ -20,14 +22,28 @@ const io = new Server(server, {
 app.use(express.json());
 app.use(cors({
     credentials: true,
-    origin: 'https://chat-airfun.netlify.app'
+    origin: process.env.CLIENT_URL
 }));
 app.use('/api', router);
 app.get('/', (req, res) => {
     res.json({message: 'hello bitch'})
 });
 
-
+const sendNotification = (to = '', title = '', body = '') => {
+    axios.post('https://fcm.googleapis.com/fcm/send',
+        {
+            to,
+            notification: {
+                title,
+                body,
+            }
+        },
+        {
+            headers: {
+                'Authorization': process.env.FCM_AUTHORIZATION,
+            }
+        })
+};
 io.on('connection', async (socket) => {
     socket.join('all');
 
@@ -89,18 +105,22 @@ io.on('connection', async (socket) => {
         await sendUnread();
 
         socket.on('iSentMessage', async (data) => {
+            const {senderName, receiverId, RSId, fcmToken, msgContent} = data;
+            //const message =
             await new Message({
                 ...data,
-                room: myId.localeCompare(data.receiverId) === 1 ? `${data.receiverId}${myId}` : `${myId}${data.receiverId}`
+                // room: myId.localeCompare(data.receiverId) === 1 ? `${data.receiverId}${myId}` : `${myId}${data.receiverId}`
             }).save();
-
+            // console.log(message);
+            // console.log(fcmToken);
+            sendNotification(fcmToken, senderName, msgContent);
             const myMessages = await Message.find({$or: [{senderId: myId}, {receiverId: myId}]});
             socket.emit('myMessages', myMessages);
 
-            const hisMessages = await Message.find({$or: [{senderId: data.receiverId}, {receiverId: data.receiverId}]});
-            socket.to(data.RSId).emit('myMessages', hisMessages);
+            const hisMessages = await Message.find({$or: [{senderId: receiverId}, {receiverId}]});
+            socket.to(RSId).emit('myMessages', hisMessages);
 
-            await sendUnread(data.RSId, data.receiverId)
+            await sendUnread(RSId, receiverId)
         });
         socket.on('iRead', async function ({receiverId, senderId, RSId}) {
             const readChanges = await Message.updateMany({receiverId, senderId}, {deliveryStatus: 2});
@@ -146,7 +166,7 @@ io.on('connection', async (socket) => {
 });
 const start = async () => {
     try {
-        await mongoose.connect('mongodb+srv://airfun:airfun@cluster0.gggz2.mongodb.net/auth?retryWrites=true&w=majority', {
+        await mongoose.connect(process.env.DB_URL, {
             useNewUrlParser: true,
             useUnifiedTopology: true
         });

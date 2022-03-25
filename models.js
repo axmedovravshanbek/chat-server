@@ -3,8 +3,8 @@ const {Schema, model} = require('mongoose');
 const User = new Schema({
     email: {type: String, required: true, unique: true},
     username: {type: String, default: 'username'},
-    // fullName: {type: String, default: 'full name'},
     socketId: {type: String, default: ''},
+    fcmToken: {type: String, default: ''},
     fullName: {type: String, required: true},
     password: {type: String, required: true},
     isActivated: {type: Boolean, default: false},
@@ -26,7 +26,7 @@ const Message = new Schema({
     msgContent: {type: String, required: true},
     sentTime: {type: Number, default: new Date()},
     msgType: {type: String, default: 'text'},
-    room: {type: String, default: 'text'},
+    // room: {type: String, default: 'text'},
     deliveryStatus: {type: Number, default: 1}
 });
 

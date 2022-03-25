@@ -9,14 +9,14 @@ const router = new Router();
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: 'ahmedovravshanbek21@gmail.com',
-        pass: 'axmedov312'
+        user: process.env.GMAIL_NAME,
+        pass: process.env.GMAIL_PASS
     }
 });
 
 const sendMail = async (to, link) => {
     transporter.sendMail({
-        from: 'ahmedovravshanbek21@gmail.com',
+        from: process.env.GMAIL_USER,
         to,
         subject: 'Account Activation',
         html:
@@ -34,10 +34,9 @@ const sendMail = async (to, link) => {
         console.log('email sent');
         return true
     });
-
 };
 const generateToken = (payload) => {
-    const refreshToken = jwt.sign(payload, 'air-fun-refresh-key', {expiresIn: '30d'});
+    const refreshToken = jwt.sign(payload, process.env.SECRET, {expiresIn: '30d'});
     return {refreshToken}
 };
 const saveToken = async (userId, refreshToken) => {
@@ -50,7 +49,7 @@ const saveToken = async (userId, refreshToken) => {
 };
 const validateRefreshToken = (token) => {
     try {
-        return jwt.verify(token, 'air-fun-refresh-key')
+        return jwt.verify(token, process.env.SECRET)
     } catch (e) {
         return null
     }
@@ -62,7 +61,11 @@ router.post('/registration', async (req, res) => {
         const candidate = await User.findOne({email});
         if (candidate) {
             return res.status(400).json({
-                message: {en: 'User already exists', uz: 'Foydalanuvchi allaqachon mavjud', ru: 'Пользователь уже существует'},
+                message: {
+                    en: 'User already exists',
+                    uz: 'Foydalanuvchi allaqachon mavjud',
+                    ru: 'Пользователь уже существует'
+                },
                 errorField: 'email'
             })
         }
@@ -75,7 +78,7 @@ router.post('/registration', async (req, res) => {
             password: hashedPassword,
             activationLink
         });
-        await sendMail(email, `https://airfun-b.herokuapp.com/api/activate/${activationLink}/`);
+        await sendMail(email, `${process.env.SERVER_URL}/api/activate/${activationLink}/`);
         const tokens = generateToken({
             _id: user._id,
             email: user.email,
@@ -145,16 +148,6 @@ router.post('/login', async (req, res) => {
         res.status(401).json({message: 'catch error'})
     }
 });
-// router.post('/logout', async (req, res) => {
-//     try {
-//         const {refreshToken} = req.cookies;
-//         const tokenData = await Token.deleteOne({refreshToken});
-//         return res.json({token: tokenData})
-//     } catch (e) {
-//         console.log(e);
-//         res.json({message: 'catch error'})
-//     }
-// });
 router.get('/refresh', async (req, res) => {
     try {
         const refreshToken = req.headers.authorization.split(' ')[1];
@@ -200,6 +193,12 @@ router.get('/refresh', async (req, res) => {
         res.json({message: 'catch error'})
     }
 });
+router.post('/set_token', async function (req, res) {
+    const {_id, fcmToken} = req.body;
+    console.log(_id, fcmToken);
+    await User.updateOne({_id}, {fcmToken});
+    res.json({message:'token is set'})
+});
 router.get('/activate/:link', async (req, res) => {
     try {
         const activationLink = req.params.link;
@@ -209,7 +208,7 @@ router.get('/activate/:link', async (req, res) => {
         }
         user.isActivated = true;
         await user.save();
-        return res.redirect('https://chat-airfun.netlify.app')
+        return res.redirect(process.env.CLIENT_URL)
     } catch (e) {
         console.log(e);
         res.json({message: 'catch error'});
