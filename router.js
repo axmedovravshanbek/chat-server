@@ -51,7 +51,7 @@ const validateRefreshToken = (token) => {
         return null
     }
 };
-
+console.log(transporter.auth);
 router.post('/registration', async (req, res) => {
     try {
         const {email, password, fullName, imgSrc} = req.body;
