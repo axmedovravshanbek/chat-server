@@ -51,7 +51,7 @@ const validateRefreshToken = (token) => {
         return null
     }
 };
-console.log('transporter.options',transporter.options);
+console.log('transporter.options', transporter.options);
 router.post('/registration', async (req, res) => {
     try {
         const {email, password, fullName, imgSrc} = req.body;
@@ -193,8 +193,10 @@ router.get('/refresh', async (req, res) => {
 router.post('/set_token', async function (req, res) {
     const {_id, fcmToken} = req.body;
     console.log(_id, fcmToken);
-    await User.updateOne({_id}, {fcmToken});
-    res.json({message: 'token is set'})
+    if (_id !== undefined) {
+        await User.updateOne({_id}, {fcmToken});
+        res.json({message: 'token is set'})
+    }
 });
 router.get('/activate/:link', async (req, res) => {
     try {
