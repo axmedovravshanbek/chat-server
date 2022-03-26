@@ -9,23 +9,21 @@ const router = new Router();
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: process.env.GMAIL_NAME,
+        user: process.env.GMAIL_USER,
         pass: process.env.GMAIL_PASS
     }
 });
 
 const sendMail = async (to, link) => {
+    console.log(transporter.auth);
     transporter.sendMail({
         from: process.env.GMAIL_USER,
         to,
         subject: 'Account Activation',
-        html:
-            `
-                <div>
+        html: `<div>
                     <h1>Press the link below to activate your account</h1>
                     <a href="${link}">${link}</a>
-                </div>
-            `
+                </div>`
     }, (e) => {
         if (e) {
             console.log('error while sending email', e);
@@ -54,7 +52,16 @@ const validateRefreshToken = (token) => {
         return null
     }
 };
-
+const send=async ()=>{
+    try {
+        sendMail('blackburnairfun@gmail.com', 'hello');
+        console.log('ketti')
+    }
+    catch (e) {
+        console.log(e)
+    }
+};
+send()
 router.post('/registration', async (req, res) => {
     try {
         const {email, password, fullName, imgSrc} = req.body;

@@ -58,7 +58,6 @@ io.on('connection', async (socket) => {
                 return socket.emit('unreadMessages', unread);
             }
             socket.to(RSId).emit('unreadMessages', unread)
-
         };
         const myChats = await Message.aggregate([
             {$match: {$or: [{receiverId: Types.ObjectId(myId)}, {senderId: Types.ObjectId(myId)}]}},
