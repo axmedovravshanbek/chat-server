@@ -15,7 +15,6 @@ const transporter = nodemailer.createTransport({
 });
 
 const sendMail = async (to, link) => {
-    console.log(transporter.auth);
     transporter.sendMail({
         from: process.env.GMAIL_USER,
         to,
@@ -52,16 +51,7 @@ const validateRefreshToken = (token) => {
         return null
     }
 };
-const send=async ()=>{
-    try {
-        sendMail('blackburnairfun@gmail.com', 'hello');
-        console.log('ketti')
-    }
-    catch (e) {
-        console.log(e)
-    }
-};
-send()
+
 router.post('/registration', async (req, res) => {
     try {
         const {email, password, fullName, imgSrc} = req.body;
@@ -204,7 +194,7 @@ router.post('/set_token', async function (req, res) {
     const {_id, fcmToken} = req.body;
     console.log(_id, fcmToken);
     await User.updateOne({_id}, {fcmToken});
-    res.json({message:'token is set'})
+    res.json({message: 'token is set'})
 });
 router.get('/activate/:link', async (req, res) => {
     try {
