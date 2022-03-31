@@ -17,11 +17,16 @@ router.post('/sign_in', async (req, res) => {
     }
 });
 router.post('/set_token', async function (req, res) {
-    const {_id, fcmToken} = req.body;
-    if (_id !== undefined) {
-        await User.updateOne({_id}, {fcmToken});
-        return res.status(200)
-    } else return res.status(401)
+    try {
+        const {_id, fcmToken} = req.body;
+        if (_id !== undefined) {
+            await User.updateOne({_id}, {fcmToken});
+            return res.status(200)
+        } else res.json({message: 'catch error', error: e})
+    } catch (e) {
+        console.log(e);
+        res.json({message: 'catch error', error: e})
+    }
 });
 router.get('/users', async (req, res) => {
     try {

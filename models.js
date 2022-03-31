@@ -4,14 +4,13 @@ const User = new Schema({
     email:      {type: String,  required: true, unique: true},
     givenName:  {type: String,  required: true},
     familyName: {type: String,  required: true},
-    fullName:   {type: String,  default:'Ani'},
     imageUrl:   {type: String,  required: true},
 
-    fcmToken:   {type: String,  default: ''},
     typingTo:   {type: String,  default: ''},
+    fcmToken:   {type: String,  default: ''},
+    socketId:   {type: String,  default: ''},
     lastOnline: {type: Number,  default: new Date()},
-    isOnline:   {type: Boolean, default: true},
-    socketId:   {type: String,  default: ''}
+    isOnline:   {type: Boolean, default: true}
 });
 
 const Message = new Schema({
