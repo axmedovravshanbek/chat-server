@@ -17,6 +17,8 @@ router.post('/sign_in', async (req, res) => {
     }
 });
 router.post('/set_token', async function (req, res) {
+console.log('++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+console.log(req.body);
     try {
         const {_id, fcmToken} = req.body;
         if (_id !== undefined) {
