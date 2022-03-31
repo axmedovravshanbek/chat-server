@@ -28,7 +28,6 @@ app.use('/api', router);
 app.get('/', (req, res) => {
     res.json({message: 'hello bitch'})
 });
-
 const sendNotification = (to = '', title = '', body = '') => {
     axios.post('https://fcm.googleapis.com/fcm/send',
         {
@@ -46,9 +45,8 @@ const sendNotification = (to = '', title = '', body = '') => {
 };
 io.on('connection', async (socket) => {
     socket.join('all');
-
     socket.on('imOnline', async (myId) => {
-        await User.updateOne({_id: myId}, {isOnline: true, socketId: socket.id}, {upsert: true});
+        await User.updateOne({_id: myId}, {isOnline: true, socketId: socket.id});
         const sendUnread = async (RSId, userId = myId) => {
             const unread = await Message.aggregate([
                 {$match: {$and: [{receiverId: Types.ObjectId(userId)}, {deliveryStatus: 1}]}},
@@ -106,7 +104,6 @@ io.on('connection', async (socket) => {
         socket.on('iSentMessage', async (data) => {
             const {senderName, receiverId, RSId, fcmToken, msgContent} = data;
             await new Message({...data}).save();
-            console.log(fcmToken, senderName, msgContent);
             sendNotification(fcmToken, senderName, msgContent);
             const myMessages = await Message.find({$or: [{senderId: myId}, {receiverId: myId}]});
             socket.emit('myMessages', myMessages);
@@ -137,10 +134,11 @@ io.on('connection', async (socket) => {
         socket.on('disconnected', async () => {
             const date = Date.now();
             await User.updateOne({_id: myId}, {
-                isOnline: false,
-                socketId: '',
                 lastOnline: date,
-                typingTo: ''
+                isOnline: false,
+                fcmToken: '',
+                typingTo: '',
+                socketId: ''
             });
             const allUsers = await User.find();
             socket.to('all').emit('allUsers', allUsers);
@@ -149,9 +147,9 @@ io.on('connection', async (socket) => {
     socket.on('disconnect', async () => {
         const date = Date.now();
         await User.updateOne({socketId: socket.id}, {
-            isOnline: false,
-            // socketId: '',
             lastOnline: date,
+            isOnline: false,
+            socketId: '',
             typingTo: ''
         });
         const allUsers = await User.find();

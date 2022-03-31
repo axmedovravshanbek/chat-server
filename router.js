@@ -1,190 +1,16 @@
-const uuid = require('uuid');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const nodemailer = require('nodemailer');
-const {User, Token} = require('./models');
 const Router = require('express').Router;
+const {User} = require('./models');
 
 const router = new Router();
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_PASS
-    }
-});
 
-const sendMail = async (to, link) => {
-    transporter.sendMail({
-        from: process.env.GMAIL_USER,
-        to,
-        subject: 'Account Activation',
-        html: `<div>
-                    <h1>Press the link below to activate your account</h1>
-                    <a href="${link}">${link}</a>
-                </div>`
-    }, (e) => {
-        if (e) {
-            console.log('error while sending email', e);
-            return false
-        }
-        console.log('email sent');
-        return true
-    });
-};
-const generateToken = (payload) => {
-    const refreshToken = jwt.sign(payload, process.env.SECRET, {expiresIn: '30d'});
-    return {refreshToken}
-};
-const saveToken = async (userId, refreshToken) => {
-    const tokenData = await Token.findOne({user: userId});
-    if (tokenData) {
-        tokenData.refreshToken = refreshToken;
-        return tokenData.save()
-    }
-    return await Token.create({user: userId, refreshToken})
-};
-const validateRefreshToken = (token) => {
+router.post('/sign_in', async (req, res) => {
     try {
-        return jwt.verify(token, process.env.SECRET)
-    } catch (e) {
-        return null
-    }
-};
-console.log('transporter.options', transporter.options);
-router.post('/registration', async (req, res) => {
-    try {
-        const {email, password, fullName, imgSrc} = req.body;
-        const candidate = await User.findOne({email});
+        const candidate = await User.findOne({email: req.body.email});
         if (candidate) {
-            return res.status(400).json({
-                message: {
-                    en: 'User already exists',
-                    uz: 'Foydalanuvchi allaqachon mavjud',
-                    ru: 'Пользователь уже существует'
-                },
-                errorField: 'email'
-            })
+            return res.json({user: candidate})
         }
-        const hashedPassword = await bcrypt.hash(password, 3);
-        const activationLink = uuid.v4();
-        const user = await User.create({
-            email,
-            fullName,
-            imgSrc,
-            password: hashedPassword,
-            activationLink
-        });
-        await sendMail(email, `${process.env.SERVER_URL}/api/activate/${activationLink}/`);
-        const tokens = generateToken({
-            _id: user._id,
-            email: user.email,
-            isActivated: user.isActivated,
-            fullName: user.fullName,
-            imgSrc: user.imgSrc,
-            activationLink: user.activationLink
-        });
-        await saveToken(user._id, tokens.refreshToken);
-
-        return res.json({
-            ...tokens,
-            user: {
-                _id: user._id,
-                email: user.email,
-                isActivated: user.isActivated,
-                fullName: user.fullName,
-                imgSrc: user.imgSrc,
-                activationLink: user.activationLink
-            }
-        })
-    } catch (e) {
-        console.log(e);
-        res.json({message: 'catch error'})
-    }
-});
-router.post('/login', async (req, res) => {
-    try {
-        const {email, password} = req.body;
-        const user = await User.findOne({email});
-        if (!user) {
-            return res.status(400).json({
-                message: {en: 'User not found', uz: 'Foydalanuvchi topilmadi', ru: 'Пользователь не найден'},
-                errorField: 'email'
-            })
-        }
-        const isPasswordTrue = await bcrypt.compare(password, user.password);
-        if (!isPasswordTrue) {
-            return res.status(400).json({
-                message: {en: 'Wrong password', uz: 'Noto\'g\'ri parol', ru: 'Неправильный пароль'},
-                errorField: 'password'
-            })
-        }
-        const tokens = generateToken({
-            _id: user._id,
-            email: user.email,
-            isActivated: user.isActivated,
-            fullName: user.fullName,
-            imgSrc: user.imgSrc,
-            activationLink: user.activationLink
-        });
-        await saveToken(user._id, tokens.refreshToken);
-
-        return res.json({
-            ...tokens,
-            user: {
-                _id: user._id,
-                email: user.email,
-                isActivated: user.isActivated,
-                fullName: user.fullName,
-                imgSrc: user.imgSrc,
-                activationLink: user.activationLink
-            }
-        })
-    } catch (e) {
-        console.log(e);
-        res.status(401).json({message: 'catch error'})
-    }
-});
-router.get('/refresh', async (req, res) => {
-    try {
-        const refreshToken = req.headers.authorization.split(' ')[1];
-        if (!refreshToken) {
-            return res.status(401).json({
-                message: `refresh token is not found`
-            })
-        }
-        const userValidated = validateRefreshToken(refreshToken);
-        const tokenFromDB = await Token.findOne({refreshToken});
-        if (!userValidated) {
-            return res.status(401).json({message: 'token is not validated'})
-        }
-        if (!tokenFromDB) {
-            return res.status(401).json({message: 'refreshToken '})
-        }
-        const user = await User.findById(userValidated._id);
-        const tokens = generateToken({
-            _id: user._id,
-            email: user.email,
-            isActivated: user.isActivated,
-            fullName: user.fullName,
-            imgSrc: user.imgSrc,
-            activationLink: user.activationLink
-        });
-        await saveToken(user._id, tokens.refreshToken);
-
-        return res.json({
-            refTok: refreshToken,
-            ...tokens,
-            user: {
-                _id: user._id,
-                email: user.email,
-                isActivated: user.isActivated,
-                fullName: user.fullName,
-                imgSrc: user.imgSrc,
-                activationLink: user.activationLink
-            }
-        })
-
+        const user = await User.create(req.body);
+        return res.json({user})
     } catch (e) {
         console.log(e);
         res.json({message: 'catch error'})
@@ -192,34 +18,18 @@ router.get('/refresh', async (req, res) => {
 });
 router.post('/set_token', async function (req, res) {
     const {_id, fcmToken} = req.body;
-    console.log(_id, fcmToken);
     if (_id !== undefined) {
         await User.updateOne({_id}, {fcmToken});
-        res.json({message: 'token is set'})
-    }
-});
-router.get('/activate/:link', async (req, res) => {
-    try {
-        const activationLink = req.params.link;
-        const user = await User.findOne({activationLink});
-        if (!user) {
-            return res.json({message: 'not dis link'});
-        }
-        user.isActivated = true;
-        await user.save();
-        return res.redirect(process.env.CLIENT_URL)
-    } catch (e) {
-        console.log(e);
-        res.json({message: 'catch error'});
-    }
+        return res.status(200)
+    } else return res.status(401)
 });
 router.get('/users', async (req, res) => {
     try {
         const users = await User.find();
-        res.json(users)
+        await res.json(users)
     } catch (e) {
         console.log(e);
-        res.json({message: 'catch error'});
+        await res.json({message: 'catch error'});
     }
 });
 
