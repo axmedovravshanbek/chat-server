@@ -23,7 +23,7 @@ console.log(req.body);
         const {_id, fcmToken} = req.body;
         if (_id !== undefined) {
             await User.updateOne({_id}, {fcmToken});
-            return res.status(200)
+            return res.json({message: 'set'})
         } else res.json({message: 'catch error', error: e})
     } catch (e) {
         console.log(e);
