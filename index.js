@@ -14,7 +14,7 @@ const server = http.createServer(app);
 const PORT = process.env.PORT || 80;
 const io = new Server(server, {
     cors: {
-        origin: '*',
+        origin: process.env.CLIENT_URL,
         methods: ["GET", "POST", "OPTIONS"],
     },
 });
@@ -22,7 +22,7 @@ const io = new Server(server, {
 app.use(express.json());
 app.use(cors({
     credentials: true,
-    origin: '*'
+    origin: process.env.CLIENT_URL
 }));
 app.use('/api', router);
 app.get('/', (req, res) => {
